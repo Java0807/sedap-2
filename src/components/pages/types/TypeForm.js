@@ -81,8 +81,8 @@ export default function TypeForm({
     };
 
     const url = form.documentId
-      ? `http://192.168.100.109:1337/api/types/${form.documentId}`
-      : `http://192.168.100.109:1337/api/types`;
+      ? `http://192.168.100.114:1337/api/types/${form.documentId}`
+      : `http://192.168.100.114:1337/api/types`;
 
     const method = form.documentId ? "PUT" : "POST";
 

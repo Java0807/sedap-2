@@ -97,7 +97,7 @@ export default function Dashboard() {
         },
         body: JSON.stringify(values),
       };
-      fetch("http://192.168.100.109:1337/api/types", options)
+      fetch("http://192.168.100.114:1337/api/types", options)
         .then((response) => response.json())
         .then((res) => {
           console.log(res);

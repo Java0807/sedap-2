@@ -37,7 +37,7 @@ export default function TypePage() {
 
     try {
       const res = await axios.delete(
-        `http://192.168.100.109:1337/api/types/${typeId}`
+        `http://192.168.100.114:1337/api/types/${typeId}`
       );
       console.log("Deleted:", res.data);
       setDialogState({ open: false, categoryId: null });

@@ -36,7 +36,7 @@ function TypeTable() {
 
   const handleDelete = (categoryId) => {
     if (categoryId) {
-      fetch(`http://192.168.100.109:1337/api/categories/${categoryId}`, {
+      fetch(`http://192.168.100.114:1337/api/categories/${categoryId}`, {
         method: "DELETE",
       })
         .then((res) => {

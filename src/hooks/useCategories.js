@@ -1,78 +1,20 @@
 import { useEffect, useState } from "react";
 import { axiosInstance } from "@/utils/axiosInstance";
-const ROOT_PATH = "/categories";
 import useCurrentUser from "./useCurrentUser";
+
+const ROOT_PATH = "/categories";
 
 export default function useCategory() {
   const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState([]);
-  const [error, setError] = useState();
+  const [error, setError] = useState(null);
   const user = useCurrentUser();
 
   useEffect(() => {
-    if (user) {
-      axiosInstance
-        .get(
-          `${ROOT_PATH}?filters[restaurant][documentId][$eq]=${user.restaurantId}`
-        )
-        .then((response) => {
-          setCategories(response.data.data);
-        })
-        .catch((error) => {
-          console.log("error", error);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+    if (user?.restaurantId) {
+      reFetch();
     }
   }, [user]);
-
-  const createCategory = (data) => {
-    if (data) {
-      const values = {
-        data: {
-          name: data.name,
-          description: data.description,
-          internalName: `Asliddin_${data.name}`,
-          restaurant: user?.restaurantId,
-        },
-      };
-
-      axiosInstance
-        .post(ROOT_PATH, values)
-        .then((res) => {
-          console.log("Success:", res.data.data);
-          setCategories(res.data.data);
-          reFetch();
-        })
-        .catch((error) => {
-          console.error("Error creating category:", error);
-          setError(error);
-        });
-    } else {
-      console.error("restaurantId topilmadi");
-    }
-  };
-
-  const getCategory = async (documentId) => {
-    const cat = axiosInstance
-      .get(ROOT_PATH + "/" + documentId)
-      .then((res) => res.data.data)
-      .catch((err = console.error(error)));
-    return cat;
-  };
-
-  const deleteCategory = async (documentId) => {
-    axiosInstance
-      .delete(`${ROOT_PATH}/${documentId}`)
-      .then((res) => {
-        console.log(res, "res");
-        reFetch();
-      })
-      .catch((err) => {
-        setError(err);
-      });
-  };
 
   const reFetch = () => {
     setIsLoading(true);
@@ -81,14 +23,55 @@ export default function useCategory() {
         `${ROOT_PATH}?filters[restaurant][documentId][$eq]=${user.restaurantId}`
       )
       .then((res) => setCategories(res.data.data))
-      .catch((err) => setError(err))
+      .catch((err) => {
+        console.error("Kategoriya olishda xatolik:", err);
+        setError(err);
+      })
       .finally(() => setIsLoading(false));
+  };
+
+  const createCategory = (data) => {
+    if (!user?.restaurantId) {
+      console.error("restaurantId topilmadi");
+      return;
+    }
+
+    const values = {
+      data: {
+        name: data.name,
+        description: data.description,
+        internalName: `Asliddin_${data.name}`,
+        restaurant: user.restaurantId,
+      },
+    };
+
+    axiosInstance
+      .post(ROOT_PATH, values)
+      .then((res) => {
+        console.log("Kategoriya yaratildi:", res.data.data);
+        reFetch();
+      })
+      .catch((error) => {
+        console.error("Kategoriya yaratishda xatolik:", error);
+        setError(error);
+      });
+  };
+
+  const getCategory = async (documentId) => {
+    try {
+      const res = await axiosInstance.get(`${ROOT_PATH}/${documentId}`);
+      return res.data.data;
+    } catch (error) {
+      console.error("Kategoriya olishda xatolik:", error);
+      setError(error);
+      return null;
+    }
   };
 
   const updateCategory = async (data) => {
     if (!data?.documentId) {
       console.error("documentId topilmadi");
-      // return;
+      return;
     }
 
     const values = {
@@ -96,19 +79,32 @@ export default function useCategory() {
         name: data.name,
         description: data.description,
         internalName: `${data.name}Res`,
-        restaurant: data.restaurantId || data?.restaurantId,
+        restaurant: data.restaurantId || user?.restaurantId,
       },
     };
 
     axiosInstance
       .patch(`${ROOT_PATH}/${data.documentId}`, values)
       .then((res) => {
-        console.log("Updated:", res.data);
+        console.log("Kategoriya yangilandi:", res.data);
         reFetch();
       })
       .catch((error) => {
-        console.error("Xatolik:", error);
+        console.error("Kategoriya yangilashda xatolik:", error);
         setError(error);
+      });
+  };
+
+  const deleteCategory = async (documentId) => {
+    axiosInstance
+      .delete(`${ROOT_PATH}/${documentId}`)
+      .then((res) => {
+        console.log("Kategoriya o‘chirildi:", res.data);
+        reFetch();
+      })
+      .catch((err) => {
+        console.error("Kategoriya o‘chirishda xatolik:", err);
+        setError(err);
       });
   };
 

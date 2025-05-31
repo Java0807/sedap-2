@@ -20,7 +20,7 @@ function FoodsMap({ selected, data, refetch }) {
 
   const handleDelete = (foodId) => {
     if (foodId) {
-      fetch(`http://192.168.100.109:1337/api/foods/${foodId}`, {
+      fetch(`http://192.168.100.114:1337/api/foods/${foodId}`, {
         method: "DELETE",
       })
         .then((res) => {
