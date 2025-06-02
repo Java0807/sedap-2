@@ -3,7 +3,7 @@ import { axiosInstance } from "@/utils/axiosInstance";
 const ROOT_PATH = "/categories";
 import useCurrentUser from "./useCurrentUser";
 
-export default function useCategory() {
+export default function useCategories() {
   const [isLoading, setIsLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [error, setError] = useState();

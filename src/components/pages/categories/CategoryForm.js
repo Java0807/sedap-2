@@ -22,7 +22,18 @@ export default function CategoryForm({
     name: "",
     description: "",
   });
-  const [editCategory, setEditCategory] = useState(null);
+  const [editCancel, setEditCancel] = useState(null);
+
+  const handleCancel = (e) => {
+    e.preventDefault();
+    if (form.documentId) {
+      setForm({
+        documentId: null,
+        name: "",
+        description: "",
+      });
+    }
+  };
 
   useEffect(() => {
     if (category) {
@@ -59,22 +70,6 @@ export default function CategoryForm({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    if (editCategory) {
-      setForm({
-        documentId: editCategory.documentId || null,
-        name: editCategory.name || "",
-        description: editCategory.description || "",
-      });
-    } else {
-      setForm({
-        documentId: null,
-        name: "",
-        description: "",
-      });
-    }
-  }, [editCategory]);
-  console.log(form);
   return (
     <form onSubmit={handleSubmit}>
       <Box sx={{ mb: 4 }}>
@@ -111,7 +106,7 @@ export default function CategoryForm({
           </Button>
 
           {form.documentId && (
-            <IconButton color="error" onClick={onCancel} disabled={loading}>
+            <IconButton color="error" onClick={handleCancel} disabled={loading}>
               <CloseIcon />
             </IconButton>
           )}

@@ -15,7 +15,7 @@ export default function CategoriesPage() {
   return (
     <Box sx={{ maxWidth: 900, mx: "auto", mt: 4 }}>
       <Typography variant="h4" mb={3}>
-        restoranining Categories
+        Categories Page
       </Typography>
       <CategoryForm
         onCreate={createCategory}

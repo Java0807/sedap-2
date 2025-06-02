@@ -38,6 +38,7 @@ function FoodsMap({ selected, data, refetch }) {
         });
     }
   };
+  console.log("sssssss", data);
 
   return (
     <div

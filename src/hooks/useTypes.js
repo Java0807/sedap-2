@@ -1,22 +1,24 @@
 import { useEffect, useState } from "react";
 import { axiosInstance } from "@/utils/axiosInstance";
-const ROOT_PATH = "/categories";
-import useCurrentUser from "./useCurrentUser";
+const ROOT_PATH = "/types";
+import useCategories from "./useCategories";
 
 export default function useTypes() {
   const [isLoading, setIsLoading] = useState(true);
-  const [types, setType] = useState([]);
+  const [types, setTypes] = useState([]);
   const [error, setError] = useState();
-  const user = useCurrentUser();
-
+  const [{ categories }, {}] = useCategories();
+  console.log("545454", categories);
   useEffect(() => {
-    if (user) {
+    if (categories.length > 0) {
       axiosInstance
         .get(
-          `${ROOT_PATH}?filters[categories][documentId][$eq]=${user.restaurantId}`
+          `${ROOT_PATH}?filters[category][documentId][$in]=${categories.map(
+            (c) => c.documentId
+          )}&populate=*`
         )
         .then((response) => {
-          setType(response.data.data);
+          setTypes(response.data.data);
         })
         .catch((error) => {
           console.log("error", error);
@@ -25,20 +27,100 @@ export default function useTypes() {
           setIsLoading(false);
         });
     }
-  }, [user]);
+  }, [categories]);
+
+  const createType = (data) => {
+    if (data) {
+      const values = {
+        data: {
+          name: data.name,
+          category: data.category,
+        },
+      };
+
+      axiosInstance
+        .post(ROOT_PATH, values)
+        .then((res) => {
+          console.log("Success:", res.data.data);
+          setTypes(res.data.data);
+          reFetch();
+        })
+        .catch((error) => {
+          console.error("Error creating category:", error);
+          setError(error);
+        });
+    } else {
+      console.error("restaurantId topilmadi");
+    }
+  };
+
+  const getType = async (documentId) => {
+    const type = axiosInstance
+      .get(ROOT_PATH + "/" + documentId)
+      .then((res) => res.data.data)
+      .catch((err = console.error(error)));
+    return type;
+  };
+
+  const deleteType = async (documentId) => {
+    axiosInstance
+      .delete(`${ROOT_PATH}/${documentId}`)
+      .then((res) => {
+        console.log(res, "res");
+        reFetch();
+      })
+      .catch((err) => {
+        setError(err);
+      });
+  };
+
+  const reFetch = () => {
+    setIsLoading(true);
+    axiosInstance
+      .get(`${ROOT_PATH}`)
+      .then((res) => setTypes(res.data.data))
+      .catch((err) => setError(err))
+      .finally(() => setIsLoading(false));
+  };
+
+  const updateType = async (data) => {
+    if (!data?.documentId) {
+      console.error("documentId topilmadi");
+      return;
+    }
+    console.log("types", data);
+    const values = {
+      data: {
+        name: data.name,
+        category: data.category,
+      },
+    };
+
+    axiosInstance
+      .put(`${ROOT_PATH}/${data.documentId}`, values)
+      .then((res) => {
+        console.log("Updated:", res.data);
+        reFetch();
+      })
+      .catch((error) => {
+        console.error("Xatolik:", error);
+        setError(error);
+      });
+  };
 
   return [
     {
       types,
-      //  isLoading,
-      //  error,
-      //  reFetch,
+      isLoading,
+      error,
+      categories,
+      reFetch,
     },
     {
-      //  getCategory,
-      //  createCategory,
-      //  updateCategory,
-      //  deleteCategory,
+      getType,
+      createType,
+      updateType,
+      deleteType,
     },
   ];
 }

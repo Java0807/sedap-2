@@ -3,169 +3,136 @@ import {
   Box,
   TextField,
   Button,
-  Select,
   IconButton,
   CircularProgress,
+  Select,
   FormControl,
-  InputLabel,
   MenuItem,
+  InputLabel,
+  OutlinedInput,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 
 export default function TypeForm({
-  editCategory,
+  onCreate,
+  onRefetch,
+  type,
+  onUpdate,
+  data,
   onCancel,
-  foundRestaurant,
-  onSuccess,
-  refetchCategories,
-  cat,
 }) {
   const [form, setForm] = useState({
     documentId: null,
     name: "",
-    description: "",
+    category: [],
   });
-  const [category, setCategory] = useState(cat);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const [editCancel, setEditCancel] = useState(null);
 
-  useEffect(() => {
-    if (editCategory) {
-      setForm({
-        documentId: editCategory.documentId || null,
-        name: editCategory.name || "",
-        description: editCategory.description || "",
-      });
-    } else {
+  const handleCancel = (e) => {
+    e.preventDefault();
+    if (form.documentId) {
       setForm({
         documentId: null,
         name: "",
-        description: "",
+        category: [],
       });
     }
-  }, [editCategory]);
+  };
+
+  useEffect(() => {
+    if (type) {
+      setForm({
+        documentId: type.documentId,
+        name: type.name,
+        category: type.category,
+      });
+    }
+  }, [type]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
 
-  const validateForm = () => {
-    if (!form.name.trim()) {
-      setError("Category nomi kerak");
-      return false;
-    }
-    if (!foundRestaurant) {
-      setError("Restoran topilmadi");
-      return false;
-    }
-    return true;
-  };
-
-  const saveCategory = async () => {
-    if (!validateForm()) return;
-
-    setLoading(true);
-    setError(null);
-
-    const payload = {
-      data: {
-        name: form.name.trim(),
-        description: form.description.trim(),
-        internalName: `${foundRestaurant.name}_${form.name}`.replace(
-          /\s+/g,
-          ""
-        ),
-        restaurant: foundRestaurant.documentId,
-      },
-    };
-
-    const url = form.documentId
-      ? `http://192.168.100.109:1337/api/types/${form.documentId}`
-      : `http://192.168.100.109:1337/api/types`;
-
-    const method = form.documentId ? "PUT" : "POST";
-
-    try {
-      const response = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(
-          data.error?.message || "Category saqlashda xatolik yuz berdi"
-        );
-      }
-
-      setForm({ documentId: null, name: "", description: "" });
-      if (onSuccess) onSuccess(data);
-      if (refetchCategories) refetchCategories();
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
+    if (name === "category") {
+      setForm((prev) => ({
+        ...prev,
+        category: typeof value === "string" ? value.split(",") : value,
+      }));
+    } else {
+      setForm((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (form.documentId) {
+      onUpdate(form);
+    } else {
+      onCreate(form);
+    }
+    setForm({
+      documentId: null,
+      name: "",
+      category: [],
+    });
+  };
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   return (
-    <Box sx={{ mb: 4 }}>
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
-        <TextField
-          label="Type Name"
-          name="name"
-          value={form?.name}
-          onChange={handleChange}
-          sx={{ flexGrow: 1, minWidth: 200 }}
-          disabled={loading}
-        />
-        <FormControl sx={{ flexGrow: 1, minWidth: 200 }}>
-          <InputLabel id="demo-simple-select-label">Category</InputLabel>
-          <Select
+    <form onSubmit={handleSubmit}>
+      <Box sx={{ mb: 4 }}>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 2 }}>
+          <TextField
+            label="Type nomi"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
             sx={{ flexGrow: 1, minWidth: 200 }}
-            labelId="demo-simple-select-label"
-            id="demo-simple-select"
-            value={category}
-            label="Category"
-            onChange={(e) => setCategory(e.target.value)}
+            disabled={loading}
+          />
+
+          <FormControl sx={{ m: 1, width: 300 }}>
+            <InputLabel id="select-category-label">Category</InputLabel>
+            <Select
+              labelId="select-category-label"
+              id="select-category"
+              name="category"
+              value={form.category}
+              onChange={handleChange}
+              input={<OutlinedInput label="Category" />}
+            >
+              {data.map((typeItem) => (
+                <MenuItem key={typeItem.documentId} value={typeItem.documentId}>
+                  {typeItem.name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Box>
+
+        {error && <Box sx={{ color: "error.main", mb: 1 }}>{error}</Box>}
+
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+          <Button
+            variant="contained"
+            color={form.documentId ? "warning" : "primary"}
+            type="submit"
+            disabled={loading}
+            sx={{ minWidth: 120 }}
           >
-            {cat.map((cat) => (
-              <MenuItem key={cat.id} value={cat.documentId}>
-                {cat.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-      </Box>
+            {form.documentId ? "update" : "create"}
+          </Button>
 
-      {error && <Box sx={{ color: "error.main", mb: 1 }}>{error}</Box>}
-
-      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-        <Button
-          variant="contained"
-          color={form.documentId ? "warning" : "primary"}
-          onClick={saveCategory}
-          disabled={loading}
-          sx={{ minWidth: 120 }}
-        >
-          {loading ? (
-            <CircularProgress size={24} color="inherit" />
-          ) : form.documentId ? (
-            "Yangilash"
-          ) : (
-            "Qo'shish"
+          {form.documentId && (
+            <IconButton color="error" onClick={handleCancel} disabled={loading}>
+              <CloseIcon />
+            </IconButton>
           )}
-        </Button>
-
-        {form.documentId && (
-          <IconButton color="error" onClick={onCancel} disabled={loading}>
-            <CloseIcon />
-          </IconButton>
-        )}
+        </Box>
       </Box>
-    </Box>
+    </form>
   );
 }

@@ -1,6 +1,4 @@
 import React, { useEffect, useState } from "react";
-import useCurrent from "@/hooks/useCurrentUser";
-import useFetchApiItems from "@/hooks/useFetchApiItems";
 import CustomBtnFood from "@/components/pages/foods/CustomBtnFood";
 import {
   Table,
@@ -9,28 +7,25 @@ import {
   TableRow,
   TableCell,
   Paper,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
 } from "@mui/material";
+import CategoryDialog from "../categories/Dialog";
 
-function TypeTable({ types, onDelete, onRefetch, onUpdate }) {
+export default function TypeTable({
+  types,
+  onDelete,
+  onRefetch,
+  onUpdate,
+  setEditType,
+}) {
   const [dialogState, setDialogState] = useState({
     open: false,
     categoryId: null,
   });
 
-  function cancelEdit() {
-    setEditCategory(null);
-    setForm({ name: "", description: "" });
-  }
-
-  useEffect(() => {
-    setForm(editCategory);
-  }, [editCategory]);
+  const handleEdit = (type) => {
+    setEditType(type);
+    console.log("categori table", type);
+  };
 
   return (
     <>
@@ -39,8 +34,8 @@ function TypeTable({ types, onDelete, onRefetch, onUpdate }) {
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
-              <TableCell>Category</TableCell>
-              <TableCell>Description</TableCell>
+              <TableCell>Types</TableCell>
+              <TableCell>Categories</TableCell>
               <TableCell
                 sx={{ textAlign: "end", paddingRight: "40px" }}
                 colSpan={2}
@@ -50,25 +45,17 @@ function TypeTable({ types, onDelete, onRefetch, onUpdate }) {
             </TableRow>
           </TableHead>
           <TableBody>
-            {isTypeLoading ? (
-              <TableRow>
-                <TableCell colSpan={5} align="center">
-                  Yuklanmoqda...
-                </TableCell>
-              </TableRow>
-            ) : type?.length > 0 ? (
-              type?.map((cat) => (
-                <TableRow key={cat.id}>
-                  <TableCell>{cat.id}</TableCell>
-                  <TableCell>{cat.attributes?.name || cat.name}</TableCell>
-                  <TableCell>
-                    {cat.attributes?.description || cat.description || "-"}
-                  </TableCell>
+            {types.length > 0 ? (
+              types.map((type) => (
+                <TableRow key={type.id}>
+                  <TableCell>{type.id}</TableCell>
+                  <TableCell>{type.name || "-"}</TableCell>
+                  <TableCell>{type.category?.name || "-"}</TableCell>
                   <TableCell
                     sx={{ display: "flex", gap: "20px", justifyContent: "end" }}
                   >
                     <CustomBtnFood
-                      // onClick={() => }
+                      onClick={() => handleEdit(type)}
                       back="#FF5B5B26"
                       img="/foodIcon2.png"
                       text="Edit"
@@ -77,7 +64,7 @@ function TypeTable({ types, onDelete, onRefetch, onUpdate }) {
                       onClick={() =>
                         setDialogState({
                           open: true,
-                          categoryId: cat.id, // EHTIYOT: `cat.documentId` emas, `cat.id` ishlatildi
+                          categoryId: type.documentId,
                         })
                       }
                       back="#2D9CDB26"
@@ -96,35 +83,18 @@ function TypeTable({ types, onDelete, onRefetch, onUpdate }) {
             )}
           </TableBody>
         </Table>
-        <Dialog
-          open={dialogState.open}
-          onClose={() => setDialogState({ open: false, categoryId: null })}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description"
-        >
-          <DialogTitle id="alert-dialog-title">Are you sure?</DialogTitle>
-          <DialogContent>
-            <DialogContentText id="alert-dialog-description">
-              Do you want to delete?
-            </DialogContentText>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => setDialogState({ open: false, categoryId: null })}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={() => handleDelete(dialogState.categoryId)}
-              autoFocus
-            >
-              Delete
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Paper>
+      <CategoryDialog
+        isOpen={dialogState.open}
+        onConfirm={() => onDelete(dialogState.categoryId)}
+        onClose={() => {
+          setDialogState({
+            open: false,
+            categoryId: null,
+          });
+        }}
+        onRefetch={onRefetch}
+      />
     </>
   );
 }
-
-export default TypeTable;
